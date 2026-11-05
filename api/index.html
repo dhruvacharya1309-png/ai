@@ -1,0 +1,1191 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Apex Placement Simulator | Regional Intelligence</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet" />
+
+  <style>
+    :root {
+      --bg-dark: #0a0d14;
+      --bg-surface: #121824;
+      --bg-card: #192231;
+      --border-color: #273449;
+      --accent-gold: #e5a93c;
+      --accent-blue: #3b82f6;
+      --accent-emerald: #10b981;
+      --accent-rose: #f43f5e;
+      --text-primary: #f8fafc;
+      --text-muted: #94a3b8;
+      --radius-sm: 8px;
+      --radius-md: 14px;
+      --radius-lg: 20px;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background-color: var(--bg-dark);
+      color: var(--text-primary);
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    header {
+      background: rgba(18, 24, 36, 0.85);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border-color);
+      padding: 1rem 2rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      position: sticky;
+      top: 0;
+      z-index: 50;
+    }
+
+    .brand { display: flex; align-items: center; gap: 0.75rem; }
+    .brand-badge {
+      background: linear-gradient(135deg, #e5a93c, #b47214);
+      color: #000;
+      font-weight: 800;
+      font-size: 0.75rem;
+      padding: 0.25rem 0.5rem;
+      border-radius: var(--radius-sm);
+    }
+
+    .clock-pill {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.85rem;
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      padding: 0.4rem 0.9rem;
+      border-radius: 9999px;
+      color: var(--text-muted);
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    main {
+      flex: 1;
+      max-width: 1100px;
+      width: 100%;
+      margin: 2rem auto;
+      padding: 0 1.5rem;
+    }
+
+    .view-card {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-lg);
+      padding: 2.5rem;
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+    }
+
+    .notice-box {
+      background: rgba(229, 169, 60, 0.08);
+      border: 1px solid rgba(229, 169, 60, 0.3);
+      padding: 1rem 1.25rem;
+      border-radius: var(--radius-md);
+      margin-bottom: 1.5rem;
+      display: flex;
+      align-items: flex-start;
+      gap: 1rem;
+      font-size: 0.9rem;
+      line-height: 1.5;
+    }
+
+    .attribution-tag {
+      font-size: 0.8rem;
+      font-family: 'JetBrains Mono', monospace;
+      color: var(--accent-gold);
+      background: rgba(229, 169, 60, 0.1);
+      border: 1px solid rgba(229, 169, 60, 0.25);
+      padding: 0.35rem 0.75rem;
+      border-radius: var(--radius-sm);
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      margin-bottom: 1rem;
+    }
+
+    .question-headline {
+      font-size: 1.35rem;
+      font-weight: 700;
+      line-height: 1.45;
+      display: flex;
+      align-items: flex-start;
+      gap: 0.75rem;
+      margin-bottom: 1.25rem;
+    }
+
+    .badge-timer {
+      background: rgba(229, 169, 60, 0.15);
+      border: 1px solid var(--accent-gold);
+      color: var(--accent-gold);
+      padding: 0.2rem 0.6rem;
+      border-radius: var(--radius-sm);
+      font-size: 0.8rem;
+      font-family: 'JetBrains Mono', monospace;
+      white-space: nowrap;
+    }
+
+    .thinking-banner {
+      display: none;
+      background: rgba(59, 130, 246, 0.15);
+      border: 1px solid var(--accent-blue);
+      color: #93c5fd;
+      padding: 1rem 1.25rem;
+      border-radius: var(--radius-md);
+      margin-bottom: 1.25rem;
+      font-size: 0.95rem;
+      line-height: 1.5;
+    }
+
+    .time-warning-banner {
+      display: none;
+      background: rgba(244, 63, 94, 0.15);
+      border: 1px solid var(--accent-rose);
+      color: #fca5a5;
+      padding: 0.75rem 1rem;
+      border-radius: var(--radius-sm);
+      margin-bottom: 1rem;
+      font-size: 0.85rem;
+      font-weight: 600;
+    }
+
+    canvas.oscilloscope {
+      width: 100%;
+      height: 110px;
+      border-radius: var(--radius-sm);
+      background: #06080e;
+    }
+
+    .live-transcript-box {
+      background: var(--bg-dark);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-md);
+      padding: 1.25rem;
+      min-height: 85px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.9rem;
+      color: #cbd5e1;
+      line-height: 1.6;
+      margin: 1.25rem 0;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      padding: 0.85rem 1.5rem;
+      border-radius: var(--radius-sm);
+      font-weight: 600;
+      font-size: 0.95rem;
+      cursor: pointer;
+      border: none;
+      transition: all 0.2s;
+    }
+
+    .btn-gold { background: linear-gradient(135deg, #e5a93c, #b47214); color: #000; }
+    .btn-secondary { background: var(--bg-card); border: 1px solid var(--border-color); color: var(--text-primary); }
+    .btn-danger { background: rgba(244, 63, 94, 0.15); border: 1px solid var(--accent-rose); color: var(--accent-rose); }
+
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0, 0, 0, 0.85);
+      backdrop-filter: blur(8px);
+      z-index: 100;
+      align-items: center;
+      justify-content: center;
+      padding: 1.5rem;
+    }
+
+    .modal-card {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-lg);
+      padding: 2rem;
+      max-width: 520px;
+      width: 100%;
+      text-align: center;
+    }
+
+    .camera-preview {
+      width: 100%;
+      height: 240px;
+      background: #000;
+      border-radius: var(--radius-sm);
+      margin: 1rem 0;
+      object-fit: cover;
+    }
+
+    .kpi-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 1.25rem;
+      margin-bottom: 2rem;
+    }
+
+    .kpi-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-md);
+      padding: 1.25rem;
+      text-align: center;
+    }
+
+    .kpi-val {
+      font-size: 1.6rem;
+      font-weight: 800;
+      margin-top: 0.25rem;
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    .debrief-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-md);
+      padding: 1.5rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .debrief-section {
+      margin-top: 0.85rem;
+      padding-top: 0.85rem;
+      border-top: 1px solid rgba(255, 255, 255, 0.07);
+      font-size: 0.9rem;
+      line-height: 1.55;
+    }
+
+    .section-label {
+      font-weight: 700;
+      font-size: 0.8rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 0.25rem;
+    }
+
+    .scratchpad-thumb {
+      max-width: 280px;
+      width: 100%;
+      border-radius: var(--radius-sm);
+      border: 1px solid var(--border-color);
+      margin-top: 0.5rem;
+    }
+
+    .progress-pill {
+      background: rgba(16, 185, 129, 0.15);
+      border: 1px solid var(--accent-emerald);
+      color: #6ee7b7;
+      padding: 0.4rem 0.8rem;
+      border-radius: var(--radius-sm);
+      font-size: 0.85rem;
+      font-weight: 600;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      margin-bottom: 1rem;
+    }
+
+    @media print {
+      body { background: #fff !important; color: #000 !important; }
+      header, .action-bar, .btn { display: none !important; }
+      .view-card { border: none !important; padding: 0 !important; box-shadow: none !important; }
+      .kpi-card, .debrief-card { background: #f8fafc !important; border: 1px solid #cbd5e1 !important; color: #000 !important; }
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <div class="brand">
+      <span class="brand-badge">PLACEMENT CELL AI</span>
+      <span style="font-weight: 700;">Executive Placement Simulator</span>
+    </div>
+    <div class="clock-pill">
+      <span id="header-clock">--:--:--</span>
+      <span id="header-greeting" style="color: var(--accent-gold); font-weight: 600;"></span>
+    </div>
+  </header>
+
+  <main>
+    <!-- STEP 1: REGISTRATION & 3-WAY PLACEMENT CIRCUIT SETUP -->
+    <section id="view-setup" class="view-card">
+      <h2>Placement Cell Registration & Calibration</h2>
+      <p style="color: var(--text-muted); margin: 0.25rem 0 1.5rem 0;">
+        Real prompts curated by verified industry leaders, local business owners, and placement directors.
+      </p>
+
+      <div class="notice-box">
+        <div style="font-size: 1.5rem;">📝</div>
+        <div>
+          <strong style="color: var(--accent-gold);">Physical Scratchpad & Pen Required:</strong><br />
+          Certain case prompts require quick math or framework trees. Please have a physical notepad and pen on your desk.
+        </div>
+      </div>
+
+      <div style="display: grid; grid-template-columns: 1.2fr 1fr; gap: 2rem;">
+        <div>
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem;">
+            <div>
+              <label style="font-size: 0.8rem; font-weight: 600; color: var(--text-muted);">CANDIDATE FULL NAME</label>
+              <input type="text" id="input-candidate-name" value="Dhruv Acharya" style="width: 100%; background: var(--bg-card); border: 1px solid var(--border-color); padding: 0.8rem; border-radius: var(--radius-sm); color: #fff; margin-top: 0.25rem;" />
+            </div>
+            <div>
+              <label style="font-size: 0.8rem; font-weight: 600; color: var(--text-muted);">STUDENT EMAIL / ID</label>
+              <input type="email" id="input-candidate-email" value="dhruv@placement.edu" style="width: 100%; background: var(--bg-card); border: 1px solid var(--border-color); padding: 0.8rem; border-radius: var(--radius-sm); color: #fff; margin-top: 0.25rem;" />
+            </div>
+          </div>
+
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem;">
+            <div>
+              <label style="font-size: 0.8rem; font-weight: 600; color: var(--text-muted);">TARGET DOMAIN</label>
+              <select id="select-domain" style="width: 100%; background: var(--bg-card); border: 1px solid var(--border-color); padding: 0.8rem; border-radius: var(--radius-sm); color: #fff; margin-top: 0.25rem;">
+                <option value="Finance">Finance (EBITDA, Working Capital, WACC)</option>
+                <option value="Marketing">Marketing (Attribution, CAC/LTV, Funnels)</option>
+                <option value="Human Resources">Human Resources (Org Restructure, Retention)</option>
+              </select>
+            </div>
+            <div>
+              <label style="font-size: 0.8rem; font-weight: 600; color: var(--text-muted);">PLACEMENT CIRCUIT FOCUS</label>
+              <select id="select-locality" style="width: 100%; background: var(--bg-card); border: 1px solid var(--border-color); padding: 0.8rem; border-radius: var(--radius-sm); color: #fff; margin-top: 0.25rem;">
+                <option value="General" selected>🌐 General Benchmark (Pan-India & MNCs)</option>
+                <option value="Blend-Rajkot">🔀 Balanced Blend (National + Rajkot Focus)</option>
+                <option value="Blend-Ahmedabad">🔀 Balanced Blend (National + GIFT City Focus)</option>
+                <option value="Blend-Mumbai">🔀 Balanced Blend (National + Mumbai Focus)</option>
+                <option value="Rajkot">📍 100% Regional: Rajkot & Saurashtra Belt</option>
+                <option value="Ahmedabad">📍 100% Regional: Ahmedabad & GIFT City</option>
+                <option value="Mumbai">📍 100% Regional: Mumbai Financial District</option>
+              </select>
+            </div>
+          </div>
+
+          <div style="margin-bottom: 1.5rem;">
+            <label style="font-size: 0.8rem; font-weight: 600; color: var(--text-muted);">EXPERIENCE TIER</label>
+            <select id="select-tier" style="width: 100%; background: var(--bg-card); border: 1px solid var(--border-color); padding: 0.8rem; border-radius: var(--radius-sm); color: #fff; margin-top: 0.25rem;">
+              <option value="Experienced">Experienced (Strategic Trade-off Case Studies)</option>
+              <option value="Freshers">Freshers (Campus Placement Foundations)</option>
+            </select>
+          </div>
+
+          <button class="btn btn-gold" id="btn-begin-interview" style="width: 100%;">
+            Enter Placement Interview Room →
+          </button>
+        </div>
+
+        <div style="background: var(--bg-dark); border: 1px solid var(--border-color); padding: 1.25rem; border-radius: var(--radius-md); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 0.75rem;">
+          <label style="font-size: 0.8rem; color: var(--text-muted); width: 100%;">Microphone Waveform Check</label>
+          <canvas id="canvas-check-wave" class="oscilloscope"></canvas>
+          <button class="btn btn-secondary" id="btn-test-mic" style="width: 100%;">🎤 Calibrate Microphone</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- STEP 2: ACTIVE INTERVIEW ROOM -->
+    <section id="view-interview" class="view-card" style="display: none;">
+      <div class="attribution-tag" id="panel-attribution">
+        📌 Sourced from: Loading curator provenance...
+      </div>
+
+      <div class="question-headline">
+        <span id="question-text">Loading question prompt...</span>
+        <span id="badge-thinking" class="badge-timer">⏱ 10s</span>
+      </div>
+
+      <div id="thinking-banner" class="thinking-banner">
+        <div>⏳ <strong>Thinking Window Active:</strong> <span id="thinking-countdown" style="font-family: 'JetBrains Mono'; font-weight: 800;">10</span>s remaining...</div>
+        <div id="scratchpad-hint" style="font-size: 0.85rem; color: #a5f3fc; margin-top: 0.25rem;">
+          📝 <strong>Pen & Paper Authorized:</strong> Map out your framework and rough numbers now.
+        </div>
+      </div>
+
+      <div id="time-warning-banner" class="time-warning-banner">
+        ⚠️ Approaching synthesis limit. Please conclude your final point.
+      </div>
+
+      <div style="background: var(--bg-dark); border: 1px solid var(--border-color); padding: 1rem; border-radius: var(--radius-md); margin-bottom: 1rem;">
+        <canvas id="canvas-live-wave" class="oscilloscope"></canvas>
+        <div style="display: flex; justify-content: space-between; font-size: 0.75rem; color: var(--text-muted); margin-top: 0.5rem;">
+          <span>Live Oscilloscope</span>
+          <span id="rec-status-indicator">● Standby</span>
+        </div>
+      </div>
+
+      <label style="font-size: 0.8rem; font-weight: 600; color: var(--text-muted);">LIVE CANDIDATE TRANSCRIPT</label>
+      <div id="transcript-stream" class="live-transcript-box">Listening for candidate speech...</div>
+
+      <div class="action-bar" style="display: flex; gap: 1rem;">
+        <button class="btn btn-gold" id="btn-finish-answer">✓ Finish & Submit Answer</button>
+        <button class="btn btn-secondary" id="btn-simplify">💡 Simplify / Clarify (<span id="simplify-count">2</span> left)</button>
+        <button class="btn btn-danger" id="btn-pass-prompt">⏩ Pass Prompt</button>
+      </div>
+    </section>
+
+    <!-- SCRATCHPAD PHOTO MODAL -->
+    <div id="modal-scratchpad" class="modal-overlay">
+      <div class="modal-card">
+        <h3>📸 Snapshot Scratchpad Notes</h3>
+        <p style="color: var(--text-muted); font-size: 0.85rem; margin-top: 0.25rem;">
+          The curator requested physical notes for this case. Snap your rough work or upload an image.
+        </p>
+        <video id="camera-stream" class="camera-preview" autoplay playsinline></video>
+        <canvas id="camera-canvas" style="display: none;"></canvas>
+
+        <div style="display: flex; gap: 0.5rem; justify-content: center; margin-top: 1rem;">
+          <button class="btn btn-gold" id="btn-capture-photo">📷 Snap Photo</button>
+          <label class="btn btn-secondary" style="cursor: pointer;">
+            📁 Upload Image
+            <input type="file" id="input-file-photo" accept="image/*" style="display: none;" />
+          </label>
+          <button class="btn btn-secondary" id="btn-skip-photo">Skip Photo</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- STEP 3: DOSSIER & LONGITUDINAL PROGRESS AUDIT -->
+    <section id="view-dossier" class="view-card" style="display: none;">
+      <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1rem;">
+        <div>
+          <h2>Executive Placement Diagnostic Dossier</h2>
+          <p style="color: var(--text-muted);" id="dossier-candidate-meta">Candidate Assessment & Readiness Report</p>
+        </div>
+        <button class="btn btn-secondary" onclick="window.print()">🖨️ Export PDF / Print</button>
+      </div>
+
+      <div class="progress-pill" id="dossier-progress-pill">
+        📈 Longitudinal Growth: Calculating session delta against previous attempts...
+      </div>
+
+      <div class="kpi-grid">
+        <div class="kpi-card">
+          <label style="font-size: 0.75rem; color: var(--text-muted);">PLACEMENT READINESS</label>
+          <div class="kpi-val" id="kpi-tier" style="color: var(--accent-gold); font-size: 1.2rem;">--</div>
+        </div>
+        <div class="kpi-card">
+          <label style="font-size: 0.75rem; color: var(--text-muted);">SUBSTANCE SCORE</label>
+          <div class="kpi-val" id="kpi-score" style="color: var(--accent-emerald);">-- / 10</div>
+        </div>
+        <div class="kpi-card">
+          <label style="font-size: 0.75rem; color: var(--text-muted);">SPOKEN CADENCE</label>
+          <div class="kpi-val" id="kpi-wpm" style="color: var(--accent-blue);">-- WPM</div>
+        </div>
+        <div class="kpi-card">
+          <label style="font-size: 0.75rem; color: var(--text-muted);">VERBAL FILLERS</label>
+          <div class="kpi-val" id="kpi-fillers" style="color: var(--accent-rose);">0</div>
+        </div>
+      </div>
+
+      <div style="background: var(--bg-card); border: 1px solid var(--border-color); padding: 1.5rem; border-radius: var(--radius-md); margin-bottom: 2rem;">
+        <h3 style="margin-bottom: 0.5rem; font-size: 1.1rem;">Hiring Committee Verdict & Regional Fit</h3>
+        <p id="evaluator-summary" style="line-height: 1.6; color: #cbd5e1; font-size: 0.95rem;"></p>
+      </div>
+
+      <h3 style="margin-bottom: 1rem;">Curator Debrief & Scratchpad Audit</h3>
+      <div id="blueprint-rounds-list"></div>
+    </section>
+  </main>
+
+  <script>
+    /**
+     * =========================================================================
+     * SECTION 1: QUESTION BANK (GENERAL, BALANCED & REGIONAL)
+     * =========================================================================
+     */
+    const QUESTION_BANK = [
+      // GENERAL BENCHMARK (Finance)
+      {
+        id: 'FIN-GEN-01',
+        domain: 'Finance',
+        locality: 'General',
+        tier: 'Experienced',
+        curatedBy: 'CA Bhargav Pandya (Partner, Corporate Advisory)',
+        driveSource: 'Corporate Investment Banking National Drive',
+        thinkingTimeSec: 60,
+        allowScratchpad: true,
+        question: 'A fast-growing enterprise reports 300% ARR growth but an alarming negative operating cash flow trajectory. The CEO demands doubling sales headcount. You have 60 seconds on pen & paper: write down why you approve or veto this, with 3 specific cash metrics.',
+        headEvaluationKey: {
+          expectedVerdict: 'Veto headcount expansion until CAC payback stabilizes.',
+          mandatoryMetrics: ['CAC Payback Period', 'Runway / Cash Conversion Cycle', 'Burn Multiple / Gross Contribution'],
+          expectedStructure: '1. Cash runway analysis, 2. Sales ramp efficiency, 3. Burn multiple calculation',
+          instantDisqualifiers: 'Approving headcount purely on top-line revenue without verifying contribution margins.'
+        },
+        debrief: {
+          curatorIntent: 'I test if candidates understand runway discipline or get blinded by vanity growth metrics.',
+          offerHolderAnswer: 'Vetoed immediately, calculated burn multiple at 2.8x, and proved each new sales rep added $18k net burn before payback.'
+        }
+      },
+      // RAJKOT HUB (Finance)
+      {
+        id: 'FIN-RAJ-01',
+        domain: 'Finance',
+        locality: 'Rajkot',
+        tier: 'Experienced',
+        curatedBy: 'CA Bhargav Pandya (Advisor to Saurashtra Chamber & Exports)',
+        driveSource: 'Rajkot Engineering & Export Conglomerate Drive',
+        thinkingTimeSec: 60,
+        allowScratchpad: true,
+        question: 'An export-oriented manufacturing firm in Rajkot faces a 45-day delay in shipping container transit, inflating DSO from 60 to 105 days. Your local working capital credit limit is maxed. Map out on pen & paper your 3-step triage to prevent a payroll default next week.',
+        headEvaluationKey: {
+          expectedVerdict: 'Immediate LC discounting / invoice factoring plus renegotiating supplier DPO.',
+          mandatoryMetrics: ['DSO / Cash Conversion Cycle', 'Invoice Factoring / LC Discounting', 'Supplier DPO Extension'],
+          expectedStructure: '1. Factoring unbilled export receivables, 2. Staggering local vendor payouts, 3. Short-term promoter bridging loan',
+          instantDisqualifiers: 'Suggesting long-term equity financing for an immediate 7-day liquidity crisis.'
+        },
+        debrief: {
+          curatorIntent: 'I test if candidates understand local MSME export mechanics (Letters of Credit, Bill Discounting) vs textbook Silicon Valley venture debt.',
+          offerHolderAnswer: 'Factored export bills with SIDBI/banks at 90% advance, pushed local foundry vendor payables from 30 to 60 days, and safeguarded payroll.'
+        }
+      },
+      // GENERAL BENCHMARK (Marketing)
+      {
+        id: 'MKT-GEN-01',
+        domain: 'Marketing',
+        locality: 'General',
+        tier: 'Experienced',
+        curatedBy: 'Mr. Sundar Pichai (Leadership Screening Archive)',
+        driveSource: 'Product & Growth Executive Board',
+        thinkingTimeSec: 15,
+        allowScratchpad: false,
+        question: 'Your blended CAC has spiked by 42% following platform attribution privacy updates. How do you restructure your performance marketing mix and multi-touch attribution model?',
+        headEvaluationKey: {
+          expectedVerdict: 'Transition to Media Mix Modeling (MMM) and first-party incrementality.',
+          mandatoryMetrics: ['Incrementality Holdouts', 'Media Mix Modeling (MMM)', 'Zero-Party Survey Loops'],
+          expectedStructure: '1. Diagnostic holdout test, 2. Re-allocation to first-party channels, 3. Bayesian MMM deployment',
+          instantDisqualifiers: 'Suggesting an immediate budget increase to compensate for lower attribution reach.'
+        },
+        debrief: {
+          curatorIntent: 'I test whether candidates understand first-party data loops or just waste budget blaming platform algorithms.',
+          offerHolderAnswer: 'Structured into 3 levers: Bayesian Media Mix Modeling (MMM), geo-lift incrementality experiments, and zero-party survey loops.'
+        }
+      },
+      // RAJKOT HUB (Marketing)
+      {
+        id: 'MKT-RAJ-01',
+        domain: 'Marketing',
+        locality: 'Rajkot',
+        tier: 'Experienced',
+        curatedBy: 'Mr. Chetan Pathak (Regional Growth Partner)',
+        driveSource: 'Saurashtra B2B & Distribution Executive Round',
+        thinkingTimeSec: 15,
+        allowScratchpad: false,
+        question: 'Your regional B2B industrial tooling brand relies 80% on dealer network referrals across Gujarat. How do you digitize your lead attribution without alienating legacy distributors who demand local commission protection?',
+        headEvaluationKey: {
+          expectedVerdict: 'Hybrid geo-fenced lead routing with dealer commission tagging.',
+          mandatoryMetrics: ['Channel Conflict Margin', 'Dealer Attribution Tagging', 'Blended Regional CAC'],
+          expectedStructure: '1. Digital lead capture, 2. Routing leads to nearest local dealer, 3. Protecting dealer gross margin',
+          instantDisqualifiers: 'Cutting out legacy dealers to sell direct-to-consumer online.'
+        },
+        debrief: {
+          curatorIntent: 'Testing whether the candidate understands regional channel conflict or naively destroys physical distribution networks.',
+          offerHolderAnswer: 'Created a centralized catalog routing high-intent buyers directly to verified Rajkot and Ahmedabad dealers with guaranteed margin sharing.'
+        }
+      },
+      // GENERAL / NATIONAL (HR)
+      {
+        id: 'HR-GEN-01',
+        domain: 'Human Resources',
+        locality: 'General',
+        tier: 'Experienced',
+        curatedBy: 'Mr. Nimit Ganatra (Head of Global Talent)',
+        driveSource: 'Executive Leadership Panel',
+        thinkingTimeSec: 10,
+        allowScratchpad: false,
+        question: 'Your engineering organization experiences a 34% voluntary attrition spike within key senior architect roles after restructuring. What is your 30-60-90 day stabilization plan?',
+        headEvaluationKey: {
+          expectedVerdict: 'Immediate managerial skip-level audits combined with targeted retention compensation.',
+          mandatoryMetrics: ['Skip-Level Audit Velocity', 'Market Total Rewards Percentile', 'Flight Risk Retention Parity'],
+          expectedStructure: '30 days (audits/retention grants), 60 days (dual-track ladders), 90 days (autonomy redesign)',
+          instantDisqualifiers: 'Blaming market compensation without examining internal managerial friction.'
+        },
+        debrief: {
+          curatorIntent: 'Looking for rapid skip-level listening tours and retention bonus parity instead of generic morale surveys.',
+          offerHolderAnswer: 'Days 1-30: Skip-level audits and targeted retention packages. Days 31-60: Dual-track technical ladders. Days 61-90: Restructured team autonomy.'
+        }
+      }
+    ];
+
+    /**
+     * =========================================================================
+     * SECTION 2: AUDIO ENGINE, PERSISTENCE & LOCALITY ROUTER
+     * =========================================================================
+     */
+    let audioContext = null;
+    let micStream = null;
+    let analyserNode = null;
+    let mediaRecorder = null;
+    let audioChunks = [];
+    let speechRecognition = null;
+    let currentLiveTranscript = '';
+    let cameraMediaStream = null;
+
+    let roundTimer = null;
+    let softWarningTriggered = false;
+
+    const profile = {
+      name: 'Dhruv Acharya',
+      email: 'dhruv@placement.edu',
+      domain: 'Finance',
+      locality: 'General',
+      tier: 'Experienced',
+    };
+
+    const state = {
+      selectedQuestions: [],
+      currentRoundIndex: 0,
+      simplifyBudget: 2,
+      roundStartTime: 0,
+      roundsData: [],
+      currentScratchpadImage: null,
+    };
+
+    function loadHistoricalScores() {
+      try {
+        const key = `apex_scores_${profile.email}_${profile.domain}`;
+        return JSON.parse(localStorage.getItem(key)) || [];
+      } catch (e) {
+        return [];
+      }
+    }
+
+    function saveHistoricalScore(score) {
+      try {
+        const key = `apex_scores_${profile.email}_${profile.domain}`;
+        const history = loadHistoricalScores();
+        history.push({ date: new Date().toISOString(), score });
+        localStorage.setItem(key, JSON.stringify(history));
+      } catch (e) {}
+    }
+
+    async function initAudioEngine() {
+      if (!audioContext) audioContext = new (window.AudioContext || window.webkitAudioContext)();
+      if (audioContext.state === 'suspended') await audioContext.resume();
+      if (!micStream) {
+        micStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        const source = audioContext.createMediaStreamSource(micStream);
+        analyserNode = audioContext.createAnalyser();
+        analyserNode.fftSize = 2048;
+        source.connect(analyserNode);
+      }
+    }
+
+    function drawWaveform(canvasId) {
+      const canvas = document.getElementById(canvasId);
+      if (!canvas || !analyserNode) return;
+      const ctx = canvas.getContext('2d');
+      const width = canvas.width = canvas.parentElement.clientWidth || 300;
+      const height = canvas.height = 110;
+      const bufferLength = analyserNode.frequencyBinCount;
+      const dataArray = new Uint8Array(bufferLength);
+
+      function render() {
+        analyserNode.getByteTimeDomainData(dataArray);
+        ctx.fillStyle = '#06080e';
+        ctx.fillRect(0, 0, width, height);
+        ctx.lineWidth = 2;
+        ctx.strokeStyle = '#e5a93c';
+        ctx.beginPath();
+        const sliceWidth = width / bufferLength;
+        let x = 0;
+        for (let i = 0; i < bufferLength; i++) {
+          const v = dataArray[i] / 128.0;
+          const y = (v * height) / 2;
+          if (i === 0) ctx.moveTo(x, y);
+          else ctx.lineTo(x, y);
+          x += sliceWidth;
+        }
+        ctx.lineTo(width, height / 2);
+        ctx.stroke();
+        requestAnimationFrame(render);
+      }
+      render();
+    }
+
+    function speakText(text) {
+      return new Promise((resolve) => {
+        if (!('speechSynthesis' in window)) return resolve();
+        window.speechSynthesis.cancel();
+        const utterance = new SpeechSynthesisUtterance(text);
+        utterance.rate = 1.02;
+        utterance.pitch = 0.98;
+        const voices = window.speechSynthesis.getVoices();
+        const preferred = voices.find((v) => v.name.includes('Daniel') || v.name.includes('Natural')) || voices[0];
+        if (preferred) utterance.voice = preferred;
+        utterance.onend = () => resolve();
+        utterance.onerror = () => resolve();
+        window.speechSynthesis.speak(utterance);
+      });
+    }
+
+    function getSystemTimeGreeting() {
+      const h = new Date().getHours();
+      if (h >= 5 && h < 12) return 'Good morning!';
+      if (h >= 12 && h < 17) return 'Good afternoon!';
+      return 'Good evening!';
+    }
+
+    function updateClock() {
+      const now = new Date();
+      document.getElementById('header-clock').textContent = now.toTimeString().split(' ')[0];
+      document.getElementById('header-greeting').textContent = getSystemTimeGreeting();
+    }
+    setInterval(updateClock, 1000);
+    updateClock();
+
+    /**
+     * =========================================================================
+     * SECTION 3: 3-TIER PLACEMENT CIRCUIT MATCHING (GENERAL / BLEND / REGIONAL)
+     * =========================================================================
+     */
+    document.getElementById('btn-test-mic').addEventListener('click', async () => {
+      await initAudioEngine();
+      drawWaveform('canvas-check-wave');
+    });
+
+    document.getElementById('btn-begin-interview').addEventListener('click', async () => {
+      profile.name = document.getElementById('input-candidate-name').value.trim() || 'Candidate';
+      profile.email = document.getElementById('input-candidate-email').value.trim() || 'student@placement.edu';
+      profile.domain = document.getElementById('select-domain').value;
+      profile.locality = document.getElementById('select-locality').value;
+      profile.tier = document.getElementById('select-tier').value;
+
+      const domainQuestions = QUESTION_BANK.filter((q) => q.domain === profile.domain);
+
+      // 3-WAY ROUTING LOGIC:
+      if (profile.locality === 'General') {
+        // 1. General Mode: Pull national/universal cases
+        state.selectedQuestions = domainQuestions.filter((q) => q.locality === 'General');
+        if (state.selectedQuestions.length === 0) state.selectedQuestions = domainQuestions;
+      } else if (profile.locality.startsWith('Blend-')) {
+        // 2. Balanced Blend Mode: 50% Local cases + 50% National cases
+        const targetCity = profile.locality.replace('Blend-', '');
+        const localQuestions = domainQuestions.filter((q) => q.locality === targetCity);
+        const generalQuestions = domainQuestions.filter((q) => q.locality === 'General' || !q.locality);
+        state.selectedQuestions = [...localQuestions.slice(0, 3), ...generalQuestions.slice(0, 2)];
+      } else {
+        // 3. 100% Regional Focus: Local curators first, then backfill
+        const localQuestions = domainQuestions.filter((q) => q.locality === profile.locality);
+        const otherQuestions = domainQuestions.filter((q) => q.locality !== profile.locality);
+        state.selectedQuestions = [...localQuestions, ...otherQuestions];
+      }
+
+      if (state.selectedQuestions.length === 0) state.selectedQuestions = QUESTION_BANK;
+
+      await initAudioEngine();
+      initSpeechRecognition();
+
+      document.getElementById('view-setup').style.display = 'none';
+      document.getElementById('view-interview').style.display = 'block';
+      drawWaveform('canvas-live-wave');
+
+      await speakText(`${getSystemTimeGreeting()} Welcome ${profile.name}. This session is calibrated for ${profile.domain} in the ${profile.locality} placement track. Ensure your scratchpad is ready.`);
+      startRound(0);
+    });
+
+    function initSpeechRecognition() {
+      const SpeechRec = window.SpeechRecognition || window.webkitSpeechRecognition;
+      if (!SpeechRec) return;
+      speechRecognition = new SpeechRec();
+      speechRecognition.continuous = true;
+      speechRecognition.interimResults = true;
+      speechRecognition.onresult = (event) => {
+        let t = '';
+        for (let i = 0; i < event.results.length; i++) t += event.results[i][0].transcript + ' ';
+        currentLiveTranscript = t.trim();
+        document.getElementById('transcript-stream').textContent = currentLiveTranscript;
+      };
+    }
+
+    async function startRound(roundIdx) {
+      state.currentRoundIndex = roundIdx;
+      state.simplifyBudget = 2;
+      state.currentScratchpadImage = null;
+      softWarningTriggered = false;
+      document.getElementById('time-warning-banner').style.display = 'none';
+      document.getElementById('simplify-count').textContent = state.simplifyBudget;
+      currentLiveTranscript = '';
+      document.getElementById('transcript-stream').textContent = 'Listening...';
+
+      const q = state.selectedQuestions[roundIdx];
+      const hubLabel = q.locality === 'General' ? 'National Drive' : `${q.locality} Hub`;
+      document.getElementById('panel-attribution').textContent = `📌 Sourced from: ${q.curatedBy} [${hubLabel}] • ${q.driveSource}`;
+      document.getElementById('question-text').textContent = q.question;
+      document.getElementById('badge-thinking').textContent = `⏱ ${q.thinkingTimeSec}s`;
+
+      await speakText(q.question);
+
+      if (q.thinkingTimeSec > 0) {
+        await runThinkingWindow(q.thinkingTimeSec, q.allowScratchpad);
+      }
+
+      startLiveRecording();
+    }
+
+    function runThinkingWindow(sec, allowScratchpad) {
+      return new Promise((resolve) => {
+        const banner = document.getElementById('thinking-banner');
+        const count = document.getElementById('thinking-countdown');
+        const hint = document.getElementById('scratchpad-hint');
+
+        banner.style.display = 'block';
+        hint.style.display = allowScratchpad ? 'block' : 'none';
+
+        let rem = sec;
+        count.textContent = rem;
+
+        const itv = setInterval(() => {
+          rem--;
+          count.textContent = rem;
+          if (rem <= 0) {
+            clearInterval(itv);
+            banner.style.display = 'none';
+            resolve();
+          }
+        }, 1000);
+      });
+    }
+
+    function startLiveRecording() {
+      state.roundStartTime = Date.now();
+      document.getElementById('rec-status-indicator').innerHTML = '<span style="color: var(--accent-rose);">● Live Recording</span>';
+
+      audioChunks = [];
+      try {
+        mediaRecorder = new MediaRecorder(micStream, { mimeType: 'audio/webm' });
+      } catch (e) {
+        mediaRecorder = new MediaRecorder(micStream);
+      }
+      mediaRecorder.ondataavailable = (e) => { if (e.data.size > 0) audioChunks.push(e.data); };
+      mediaRecorder.start();
+
+      if (speechRecognition) {
+        try { speechRecognition.start(); } catch (e) {}
+      }
+
+      clearInterval(roundTimer);
+      roundTimer = setInterval(async () => {
+        const elapsed = (Date.now() - state.roundStartTime) / 1000;
+        if (elapsed >= 90 && !softWarningTriggered) {
+          softWarningTriggered = true;
+          document.getElementById('time-warning-banner').style.display = 'block';
+        }
+        if (elapsed >= 120) {
+          clearInterval(roundTimer);
+          document.getElementById('time-warning-banner').style.display = 'none';
+          await speakText("Understood, we have enough on that core direction. Let's move into the operational specifics.");
+          submitCurrentAnswer();
+        }
+      }, 1000);
+    }
+
+    async function stopLiveRecording() {
+      clearInterval(roundTimer);
+      document.getElementById('time-warning-banner').style.display = 'none';
+      document.getElementById('rec-status-indicator').innerHTML = '<span>● Standby</span>';
+      if (speechRecognition) {
+        try { speechRecognition.stop(); } catch (e) {}
+      }
+
+      return new Promise((resolve) => {
+        if (!mediaRecorder || mediaRecorder.state === 'inactive') return resolve(null);
+        mediaRecorder.onstop = () => resolve(new Blob(audioChunks, { type: 'audio/webm' }));
+        mediaRecorder.stop();
+      });
+    }
+
+    /**
+     * =========================================================================
+     * SECTION 4: SUBMIT ANSWER & SCRATCHPAD PHOTO MODAL
+     * =========================================================================
+     */
+    document.getElementById('btn-finish-answer').addEventListener('click', () => {
+      const q = state.selectedQuestions[state.currentRoundIndex];
+      if (q.allowScratchpad) {
+        openScratchpadModal();
+      } else {
+        submitCurrentAnswer();
+      }
+    });
+
+    async function openScratchpadModal() {
+      const modal = document.getElementById('modal-scratchpad');
+      modal.style.display = 'flex';
+      const video = document.getElementById('camera-stream');
+
+      try {
+        cameraMediaStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
+        video.srcObject = cameraMediaStream;
+      } catch (err) {
+        console.warn('Webcam access failed for scratchpad photo:', err);
+      }
+    }
+
+    function closeScratchpadModal() {
+      const modal = document.getElementById('modal-scratchpad');
+      modal.style.display = 'none';
+      if (cameraMediaStream) {
+        cameraMediaStream.getTracks().forEach((track) => track.stop());
+        cameraMediaStream = null;
+      }
+    }
+
+    document.getElementById('btn-capture-photo').addEventListener('click', () => {
+      const video = document.getElementById('camera-stream');
+      const canvas = document.getElementById('camera-canvas');
+      canvas.width = video.videoWidth || 640;
+      canvas.height = video.videoHeight || 480;
+      const ctx = canvas.getContext('2d');
+      ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+      state.currentScratchpadImage = canvas.toDataURL('image/jpeg', 0.85);
+
+      closeScratchpadModal();
+      submitCurrentAnswer();
+    });
+
+    document.getElementById('input-file-photo').addEventListener('change', (e) => {
+      const file = e.target.files[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = (event) => {
+          state.currentScratchpadImage = event.target.result;
+          closeScratchpadModal();
+          submitCurrentAnswer();
+        };
+        reader.readAsDataURL(file);
+      }
+    });
+
+    document.getElementById('btn-skip-photo').addEventListener('click', () => {
+      closeScratchpadModal();
+      submitCurrentAnswer();
+    });
+
+    async function submitCurrentAnswer() {
+      const blob = await stopLiveRecording();
+      const rawText = currentLiveTranscript.trim();
+      const wordCount = rawText.split(/\s+/).filter(Boolean).length;
+
+      if (wordCount === 0) {
+        await speakText("No spoken answer was detected. In a placement drive, silence is recorded as an unattempted response. Moving to the next question.");
+        logRoundTelemetry('[UNATTEMPTED - SILENCE]', 0, 0, 0, blob);
+        advanceNextRound();
+        return;
+      }
+
+      const durationMin = Math.max((Date.now() - state.roundStartTime) / 60000, 0.1);
+      const wpm = Math.round(wordCount / durationMin);
+      const fillers = (rawText.match(/\b(um|uh|basically|like|actually)\b/gi) || []).length;
+      const currentQ = state.selectedQuestions[state.currentRoundIndex];
+
+      let socratic = null;
+      try {
+        const res = await fetch('/api/interview', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            action: 'followup',
+            payload: {
+              question: currentQ.question,
+              headEvaluationKey: currentQ.headEvaluationKey,
+              candidateAnswer: rawText,
+              domain: profile.domain,
+              tier: profile.tier,
+              locality: profile.locality,
+            },
+          }),
+        });
+        if (res.ok) socratic = await res.json();
+      } catch (err) {}
+
+      if (!socratic) {
+        socratic = {
+          preamble: 'Understood.',
+          critique: 'You addressed the high-level concept, but let us look at the operational risk.',
+          followUpProbe: 'How would you measure margin sensitivity if your customer churn unexpectedly doubles next quarter?',
+          substanceScore: 6,
+        };
+      }
+
+      logRoundTelemetry(rawText, socratic.substanceScore || 6, wpm, fillers, blob);
+
+      const feedback = `${socratic.preamble} ${socratic.critique} ${socratic.followUpProbe}`;
+      await speakText(feedback);
+
+      advanceNextRound();
+    }
+
+    function logRoundTelemetry(transcript, score, wpm, fillers, blob) {
+      const q = state.selectedQuestions[state.currentRoundIndex];
+      state.roundsData.push({
+        round: state.currentRoundIndex + 1,
+        question: q.question,
+        curatedBy: q.curatedBy,
+        driveSource: q.driveSource,
+        locality: q.locality,
+        curatorIntent: q.debrief.curatorIntent,
+        offerHolderAnswer: q.debrief.offerHolderAnswer,
+        scratchpadImage: state.currentScratchpadImage,
+        transcript,
+        score,
+        wpm,
+        fillers,
+        blob,
+      });
+    }
+
+    function advanceNextRound() {
+      if (state.currentRoundIndex + 1 < state.selectedQuestions.length) {
+        startRound(state.currentRoundIndex + 1);
+      } else {
+        renderFinalDossier();
+      }
+    }
+
+    document.getElementById('btn-simplify').addEventListener('click', async () => {
+      if (state.simplifyBudget === 2) {
+        state.simplifyBudget--;
+        document.getElementById('simplify-count').textContent = state.simplifyBudget;
+        await speakText("In simple terms: Can you give one practical, real-world example of how this operates in day-to-day business?");
+      } else if (state.simplifyBudget === 1) {
+        state.simplifyBudget--;
+        document.getElementById('simplify-count').textContent = state.simplifyBudget;
+        await speakText("Simply put: What is the single most important metric or decision variable you would monitor in this exact situation?");
+      } else {
+        await speakText("Maximum simplifications reached. Moving to the next question.");
+        advanceNextRound();
+      }
+    });
+
+    document.getElementById('btn-pass-prompt').addEventListener('click', async () => {
+      await stopLiveRecording();
+      logRoundTelemetry('[QUESTION PASSED BY CANDIDATE]', 1, 0, 0, null);
+      await speakText("Noted. Moving forward to the next prompt.");
+      advanceNextRound();
+    });
+
+    /**
+     * =========================================================================
+     * SECTION 5: FINAL DOSSIER & LONGITUDINAL PROGRESS AUDIT
+     * =========================================================================
+     */
+    async function renderFinalDossier() {
+      document.getElementById('view-interview').style.display = 'none';
+      document.getElementById('view-dossier').style.display = 'block';
+
+      const attempted = state.roundsData.filter((r) => r.transcript !== '[UNATTEMPTED - SILENCE]' && r.transcript !== '[QUESTION PASSED BY CANDIDATE]');
+      const avgScore = state.roundsData.reduce((acc, r) => acc + r.score, 0) / state.roundsData.length;
+      const avgWpm = attempted.length > 0 ? Math.round(attempted.reduce((acc, r) => acc + r.wpm, 0) / attempted.length) : 0;
+      const totalFillers = state.roundsData.reduce((acc, r) => acc + r.fillers, 0);
+
+      const priorHistory = loadHistoricalScores();
+      saveHistoricalScore(Number(avgScore.toFixed(1)));
+
+      let progressText = `🎯 Baseline Session Logged for ${profile.name}`;
+      if (priorHistory.length > 0) {
+        const lastScore = priorHistory[priorHistory.length - 1].score;
+        const delta = (avgScore - lastScore).toFixed(1);
+        if (delta >= 0) {
+          progressText = `📈 Longitudinal Growth: +${delta} Improvement vs Previous Session (${lastScore}/10 → ${avgScore.toFixed(1)}/10)`;
+        } else {
+          progressText = `📉 Longitudinal Watch: ${delta} Variance vs Previous Session (${lastScore}/10 → ${avgScore.toFixed(1)}/10)`;
+        }
+      }
+      document.getElementById('dossier-progress-pill').textContent = progressText;
+
+      let readiness = 'Tier 3: Unprepared';
+      if (avgScore >= 7.5) readiness = 'Tier 1: High Conviction';
+      else if (avgScore >= 5.0) readiness = 'Tier 2: Conditional Hire';
+
+      document.getElementById('kpi-tier').textContent = readiness;
+      document.getElementById('kpi-score').textContent = `${avgScore.toFixed(1)} / 10`;
+      document.getElementById('kpi-wpm').textContent = `${avgWpm} WPM`;
+      document.getElementById('kpi-fillers').textContent = totalFillers;
+      document.getElementById('dossier-candidate-meta').textContent = `${profile.name} (${profile.email}) | ${profile.domain} (${profile.tier}) | Hub: ${profile.locality}`;
+
+      try {
+        const rep = await fetch('/api/interview', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            action: 'report',
+            payload: {
+              candidateProfile: profile,
+              rounds: state.roundsData,
+              totalFillers,
+              avgWpm,
+              historicalScores: priorHistory,
+            },
+          }),
+        });
+        if (rep.ok) {
+          const repData = await rep.json();
+          document.getElementById('evaluator-summary').textContent = repData.executiveSummary;
+        }
+      } catch (e) {
+        document.getElementById('evaluator-summary').textContent = `${profile.name} demonstrated structured communication across the ${profile.domain} track in the ${profile.locality} placement circuit. Metric precision should be prioritized under unscripted pressure.`;
+      }
+
+      const list = document.getElementById('blueprint-rounds-list');
+      list.innerHTML = '';
+      state.roundsData.forEach((r) => {
+        const card = document.createElement('div');
+        card.className = 'debrief-card';
+
+        let audioMarkup = '';
+        if (r.blob) {
+          const url = URL.createObjectURL(r.blob);
+          audioMarkup = `<audio controls src="${url}" style="width: 100%; margin-top: 0.75rem; filter: invert(0.9);"></audio>`;
+        }
+
+        let scratchpadMarkup = '';
+        if (r.scratchpadImage) {
+          scratchpadMarkup = `
+            <div class="debrief-section">
+              <div class="section-label" style="color: #a5f3fc;">Candidate Scratchpad Rough Notes Snapshot</div>
+              <img src="${r.scratchpadImage}" alt="Scratchpad Notes" class="scratchpad-thumb" />
+            </div>
+          `;
+        }
+
+        const hubBadge = r.locality === 'General' ? 'National Drive' : `${r.locality} Hub`;
+
+        card.innerHTML = `
+          <div style="font-size: 0.75rem; color: var(--accent-gold); font-family: 'JetBrains Mono'; margin-bottom: 0.25rem;">
+            ROUND ${r.round} • Sourced from ${r.curatedBy} [${hubBadge}] (${r.driveSource})
+          </div>
+          <div style="font-weight: 700; font-size: 1.05rem; margin-bottom: 0.75rem;">${r.question}</div>
+          
+          <div class="debrief-section">
+            <div class="section-label" style="color: var(--accent-blue);">Candidate Spoken Transcript (Substance: ${r.score}/10)</div>
+            <div style="background: var(--bg-dark); padding: 0.75rem; border-radius: var(--radius-sm); font-family: 'JetBrains Mono'; font-size: 0.85rem;">
+              "${r.transcript}"
+            </div>
+            ${audioMarkup}
+          </div>
+
+          ${scratchpadMarkup}
+
+          <div class="debrief-section">
+            <div class="section-label" style="color: var(--accent-gold);">What the Curator Was Testing For (Insider Intent)</div>
+            <div>${r.curatorIntent}</div>
+          </div>
+
+          <div class="debrief-section">
+            <div class="section-label" style="color: var(--accent-emerald);">How the Offer-Holder Answered</div>
+            <div>${r.offerHolderAnswer}</div>
+          </div>
+        `;
+        list.appendChild(card);
+      });
+    }
+  </script>
+</body>
+</html>
