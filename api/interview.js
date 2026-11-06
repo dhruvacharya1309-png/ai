@@ -1,5 +1,4 @@
-// api/interview.js
-// Vercel Serverless Function (Node.js runtime)
+// api/interview.js - Executive Placement Backend Engine (Node.js ESM Serverless Function)
 
 export const config = {
   api: {
@@ -43,10 +42,10 @@ export default async function handler(req, res) {
  */
 async function handleTranscribe(req, res, payload) {
   const apiKey = process.env.GROQ_API_KEY;
-  if (!apiKey) return res.status(500).json({ error: 'GROQ_API_KEY missing' });
+  if (!apiKey) return res.status(500).json({ error: 'GROQ_API_KEY missing in Vercel environment' });
 
   const { audioBase64, mimeType = 'audio/webm' } = payload || {};
-  if (!audioBase64) return res.status(400).json({ error: 'audioBase64 required' });
+  if (!audioBase64) return res.status(400).json({ error: 'audioBase64 payload required' });
 
   const audioBuffer = Buffer.from(audioBase64, 'base64');
   const boundary = '----WebKitFormBoundary' + Math.random().toString(36).substring(2);
@@ -70,7 +69,7 @@ async function handleTranscribe(req, res, payload) {
     Buffer.from(modelField + promptField + responseFormat + closing, 'utf-8'),
   ]);
 
-  const groqRes = await fetch('https://api.groq.com/openai/v1/audio/transcriptions', {
+  const groqRes = await fetch('[suspicious link removed]', {
     method: 'POST',
     headers: {
       Authorization: `Bearer ${apiKey}`,
@@ -90,37 +89,46 @@ async function handleTranscribe(req, res, payload) {
  */
 async function handleSocraticFollowUp(req, res, payload) {
   const apiKey = process.env.GEMINI_API_KEY;
-  if (!apiKey) return res.status(500).json({ error: 'GEMINI_API_KEY missing' });
+  if (!apiKey) return res.status(500).json({ error: 'GEMINI_API_KEY missing in Vercel environment' });
 
   const { question, headEvaluationKey, candidateAnswer, domain, tier, locality } = payload || {};
 
-  const systemInstruction = `You are an elite, no-nonsense Executive Placement Board Evaluator assessing a candidate for ${domain} (${tier}) in the ${locality || 'General'} placement circuit.
+  const systemInstruction = `You are an elite, no-nonsense Executive Placement Board Evaluator assessing a candidate for ${domain} (${tier}) in ${locality || 'General'}.
 Analyze the candidate's spoken transcript against the HEAD'S EVALUATION KEY.
 
 EVALUATION CRITERIA:
-1. STRUCTURE MATCH: Did the candidate break down the problem cleanly as expected by the head?
-2. MANDATORY METRICS: Check if the candidate mentioned the specific metrics specified by the head.
-3. DISQUALIFIER CHECK: Check if the candidate fell into any instant disqualifiers or traps.
+1. METRIC DENSITY: Did the candidate cite concrete KPIs, formulas, or financial levers?
+2. CURATOR INTENT: Did they address the core hidden objective of the question?
+3. RED FLAGS: Did they make dealbreaker assumptions or conceptual errors?
 
-RULES:
-1. ZERO FAKE PRAISE: Never use "Great answer!", "Excellent point!", or "Thank you for sharing!".
-2. NATURAL OPERATOR PREAMBLE: Open naturally with phrases like "Understood.", "Fair enough, but let's push on that.", or "You touched on the surface, but missed the core financial lever."
-3. SOCRATIC PROBE: Conclude with exactly ONE sharp follow-up probe (strictly 15 to 20 words).
-4. Output format must be strictly JSON with:
-   - "preamble": string
-   - "critique": string (1 concise sentence)
-   - "followUpProbe": string (15-20 words)
-   - "substanceScore": number (1 to 10)
-   - "metricsHit": string[]`;
+QUALITY STRATEGY:
+- Score 7-10 (Strong): Stress-test reasoning, risk mitigation, and trade-offs under pressure.
+- Score 4-6 (Vague): Skeptical stance, demand specific numbers, KPIs, and concrete execution steps.
+- Score 1-3 (Weak/Contradictory): Identify conflicting statements and demand reconciliation or conceptual pushback.
+
+STRICT MANDATORY RULES:
+1. ZERO FAKE PRAISE: NEVER say "Great answer!", "Excellent point!", "Good job!", or "Thank you for sharing!".
+2. NATURAL C-SUITE PREAMBLE: Open naturally with phrases like "Understood.", "Fair enough, but let's push on that.", or "You touched on the surface, but missed the core financial lever."
+3. EXACTLY ONE SOCRATIC FOLLOW-UP PROBE: Conclude with strictly ONE sentence containing 15 to 20 words.
+
+Return ONLY raw JSON with:
+{
+  "substanceScore": number (1-10),
+  "preamble": "string",
+  "critique": "string",
+  "followUpProbe": "string (strictly 1 sentence, 15 to 20 words)",
+  "metricsHit": ["string"],
+  "redFlags": ["string"]
+}`;
 
   const userPrompt = `
 QUESTION: "${question}"
 HEAD EVALUATION KEY: ${JSON.stringify(headEvaluationKey || {})}
 CANDIDATE SPOKEN TRANSCRIPT: "${candidateAnswer}"
 
-Evaluate against the head's rubric and deliver the response in JSON.`;
+Evaluate against the head's rubric and deliver response in JSON.`;
 
-  const geminiEndpoint = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`;
+  const geminiEndpoint = `[suspicious link removed]{apiKey}`;
 
   const geminiRes = await fetch(geminiEndpoint, {
     method: 'POST',
@@ -144,27 +152,45 @@ Evaluate against the head's rubric and deliver the response in JSON.`;
  */
 async function handleExecutiveReport(req, res, payload) {
   const apiKey = process.env.GEMINI_API_KEY;
-  if (!apiKey) return res.status(500).json({ error: 'GEMINI_API_KEY missing' });
+  if (!apiKey) return res.status(500).json({ error: 'GEMINI_API_KEY missing in Vercel environment' });
 
   const { candidateProfile, rounds, totalFillers, avgWpm, historicalScores } = payload || {};
 
   const prompt = `You are the Lead Chair of an Executive Campus Placement Board.
 Compile a candid Executive Diagnostic Dossier and Longitudinal Improvement Audit for:
 Candidate: ${candidateProfile.name} (${candidateProfile.email}) | Target: ${candidateProfile.domain} (${candidateProfile.tier}) in ${candidateProfile.locality}
-Current Session: Average WPM: ${avgWpm}, Verbal Fillers: ${totalFillers}
-Historical Scores Across Prior Sessions: ${JSON.stringify(historicalScores || [])}
-Current Rounds Telemetry: ${JSON.stringify(rounds, null, 2)}
+Current Session Telemetry: Average WPM: ${avgWpm}, Verbal Fillers: ${totalFillers}
+Historical Session Scores: ${JSON.stringify(historicalScores || [])}
+Rounds Data: ${JSON.stringify(rounds, null, 2)}
 
-Provide JSON matching:
+Calculate overall weighted score across 4 dimensions:
+- Commercial & Operational Substance: 50%
+- Socratic Agility: 25%
+- Communication Clarity: 15%
+- Verbal Composure: 10%
+
+Classify into EXACTLY one tier:
+- "Tier 1: High-Conviction Placement Candidate" (8.0 to 10.0)
+- "Tier 2: Conditional Candidate" (5.0 to 7.9)
+- "Tier 3: Unprepared for Final Board" (Below 5.0)
+
+Provide raw JSON matching:
 {
-  "readinessTier": "Tier 1: High Conviction Hire" | "Tier 2: Conditional Hire" | "Tier 3: Unprepared for Final Board",
-  "executiveSummary": "2 candid paragraphs synthesizing operational maturity, framework structure, and whether they sound like an operator or an academic student.",
+  "readinessTier": "string",
+  "overallScore": number (1.0 to 10.0),
+  "scores": {
+    "substance": number (1-100),
+    "agility": number (1-100),
+    "clarity": number (1-100),
+    "composure": number (1-100)
+  },
+  "executiveSummary": "2 candid paragraphs synthesizing operational maturity, framework structure, and whether they sound like a real operator or an academic student.",
   "strengths": ["string", "string"],
   "vulnerabilities": ["string", "string"],
-  "longitudinalProgress": "A 2-3 sentence analysis of their improvement trajectory comparing past sessions to today."
+  "longitudinalProgress": "A 2-3 sentence analysis of their trajectory across sessions."
 }`;
 
-  const geminiEndpoint = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`;
+  const geminiEndpoint = `[suspicious link removed]{apiKey}`;
 
   const geminiRes = await fetch(geminiEndpoint, {
     method: 'POST',
